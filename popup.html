@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            width: 300px;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .controls {
+            margin-bottom: 15px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .stop-btn {
+            background-color: #f44336;
+            color: white;
+        }
+        .settings {
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+        .depth-control {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .depth-control label {
+            margin-right: 10px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .status.active {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status.inactive {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>♟️ Chess Helper AI</h2>
+    </div>
+    
+    <div class="status" id="status">
+        Extension Inactive
+    </div>
+    
+    <div class="controls">
+        <button id="startAnalysis" class="start-btn">Start Analysis</button>
+        <button id="stopAnalysis" class="stop-btn">Stop Analysis</button>
+    </div>
+    
+    <div class="settings">
+        <h3>Settings</h3>
+        <div class="depth-control">
+            <label>Depth:</label>
+            <input type="range" id="depthSlider" min="5" max="20" value="15">
+            <span id="depthValue">15</span>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="showArrows"> Show best move arrows
+            </label>
+        </div>
+        <div>
+            <label>
+                <input type="checkbox" id="showEval"> Show evaluation
+            </label>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
