@@ -1,0 +1,775 @@
+const pptxgen = require("pptxgenjs");
+const React = require("react");
+const ReactDOMServer = require("react-dom/server");
+const sharp = require("sharp");
+
+// Color palette: Tech/Digital feel for teens
+// Deep purple + electric teal + coral accent + white
+const C = {
+  bg_dark: "1A1040",      // deep navy-purple (title/outro slides)
+  bg_mid:  "1E1B4B",      // indigo dark
+  bg_light:"F0EDFF",      // soft lavender (content slides)
+  bg_card: "FFFFFF",      // white cards
+  primary: "7C3AED",      // vivid purple
+  secondary:"06B6D4",     // electric cyan
+  accent:  "F43F5E",      // coral-red
+  accent2: "10B981",      // emerald green
+  accent3: "F59E0B",      // amber
+  text_dark:"1A1040",     // deep purple text
+  text_mid: "4C1D95",     // medium purple text
+  text_light:"FFFFFF",    // white text
+  text_muted:"7C6DAB",    // muted purple
+};
+
+// Icon helpers using react-icons
+const { FaMemory, FaHdd, FaCompactDisc, FaMicrochip, FaCloud, FaDatabase,
+        FaCheckCircle, FaTimesCircle, FaLayerGroup, FaServer } = require("react-icons/fa");
+const { MdSdStorage, MdStorage } = require("react-icons/md");
+
+function renderIconSvg(IconComponent, color = "#FFFFFF", size = 256) {
+  return ReactDOMServer.renderToStaticMarkup(
+    React.createElement(IconComponent, { color, size: String(size) })
+  );
+}
+
+async function iconToBase64Png(IconComponent, color, size = 256) {
+  const svg = renderIconSvg(IconComponent, color, size);
+  const pngBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
+  return "image/png;base64," + pngBuffer.toString("base64");
+}
+
+// Reusable shadow factory
+const mkShadow = () => ({ type: "outer", blur: 8, offset: 3, angle: 135, color: "000000", opacity: 0.12 });
+const mkShadowSoft = () => ({ type: "outer", blur: 14, offset: 4, angle: 135, color: "7C3AED", opacity: 0.15 });
+
+async function buildPresentation() {
+  const pres = new pptxgen();
+  pres.layout = "LAYOUT_16x9";
+  pres.title = "Storage Devices and Media";
+
+  // ─────────────────────────────────────────────
+  // SLIDE 1: Title Slide
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_dark };
+
+    // Big decorative circles
+    s.addShape(pres.shapes.OVAL, { x: -0.8, y: -0.8, w: 3.5, h: 3.5, fill: { color: C.primary, transparency: 75 }, line: { type: "none" } });
+    s.addShape(pres.shapes.OVAL, { x: 8.2, y: 3.2, w: 2.8, h: 2.8, fill: { color: C.secondary, transparency: 70 }, line: { type: "none" } });
+    s.addShape(pres.shapes.OVAL, { x: 7.5, y: -0.5, w: 1.8, h: 1.8, fill: { color: C.accent, transparency: 65 }, line: { type: "none" } });
+    s.addShape(pres.shapes.OVAL, { x: 0.3, y: 4.2, w: 1.2, h: 1.2, fill: { color: C.accent3, transparency: 60 }, line: { type: "none" } });
+
+    // Glowing card behind title
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+      x: 0.7, y: 1.0, w: 8.6, h: 3.2,
+      fill: { color: C.primary, transparency: 82 },
+      line: { color: C.secondary, width: 1.5 },
+      rectRadius: 0.18
+    });
+
+    // Icon
+    const iconData = await iconToBase64Png(FaDatabase, "#06B6D4", 300);
+    s.addImage({ data: iconData, x: 4.3, y: 1.1, w: 0.7, h: 0.7 });
+
+    s.addText("STORAGE DEVICES", {
+      x: 0.7, y: 1.55, w: 8.6, h: 0.85,
+      fontSize: 40, bold: true, color: C.text_light,
+      align: "center", fontFace: "Arial Black", margin: 0,
+      charSpacing: 3
+    });
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 3.5, y: 2.45, w: 3.0, h: 0.05, fill: { color: C.secondary }, line: { type: "none" } });
+
+    s.addText("AND MEDIA", {
+      x: 0.7, y: 2.55, w: 8.6, h: 0.7,
+      fontSize: 28, bold: true, color: C.secondary,
+      align: "center", fontFace: "Arial Black", margin: 0,
+      charSpacing: 6
+    });
+
+    s.addText("How computers store your data 💾", {
+      x: 0.7, y: 3.35, w: 8.6, h: 0.55,
+      fontSize: 15, color: "A78BFA", align: "center",
+      fontFace: "Calibri", italic: true, margin: 0
+    });
+
+    s.addText("ICT  •  Year 9", {
+      x: 0.0, y: 5.1, w: 10.0, h: 0.4,
+      fontSize: 11, color: "7C6DAB", align: "center",
+      fontFace: "Calibri", margin: 0
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 2: Introduction
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    // Top accent bar
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: C.primary }, line: { type: "none" } });
+    s.addText("Introduction", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0, charSpacing: 2
+    });
+
+    // Left card — Storage Device
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.35, y: 0.85, w: 4.35, h: 4.3,
+      fill: { color: C.bg_dark }, line: { type: "none" },
+      shadow: mkShadow()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 0.35, y: 0.85, w: 4.35, h: 0.25, fill: { color: C.secondary }, line: { type: "none" } });
+
+    const hddIcon = await iconToBase64Png(FaHdd, "#06B6D4", 300);
+    s.addImage({ data: hddIcon, x: 0.7, y: 1.25, w: 0.65, h: 0.65 });
+
+    s.addText("Storage Device", {
+      x: 1.45, y: 1.2, w: 3.0, h: 0.65,
+      fontSize: 18, bold: true, color: C.secondary,
+      fontFace: "Arial Black", margin: 0, valign: "middle"
+    });
+
+    s.addText("A piece of hardware used to store, save, and retrieve digital data on a computer or electronic system.", {
+      x: 0.55, y: 2.05, w: 3.95, h: 2.8,
+      fontSize: 14, color: "C4B5FD", fontFace: "Calibri",
+      margin: 0, valign: "top"
+    });
+
+    // Right card — Storage Media
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 5.3, y: 0.85, w: 4.35, h: 4.3,
+      fill: { color: C.bg_dark }, line: { type: "none" },
+      shadow: mkShadow()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 5.3, y: 0.85, w: 4.35, h: 0.25, fill: { color: C.accent }, line: { type: "none" } });
+
+    const dbIcon = await iconToBase64Png(MdStorage, "#F43F5E", 300);
+    s.addImage({ data: dbIcon, x: 5.65, y: 1.25, w: 0.65, h: 0.65 });
+
+    s.addText("Storage Media", {
+      x: 6.4, y: 1.2, w: 3.0, h: 0.65,
+      fontSize: 18, bold: true, color: C.accent,
+      fontFace: "Arial Black", margin: 0, valign: "middle"
+    });
+
+    s.addText("The physical material or medium on which data is actually stored inside a storage device.", {
+      x: 5.5, y: 2.05, w: 3.95, h: 2.8,
+      fontSize: 14, color: "FCA5A5", fontFace: "Calibri",
+      margin: 0, valign: "top"
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 3: Types of Storage
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: C.primary }, line: { type: "none" } });
+    s.addText("Types of Storage Devices", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0, charSpacing: 2
+    });
+
+    s.addText("Can be categorised into two parts:", {
+      x: 0.4, y: 0.72, w: 9.2, h: 0.38,
+      fontSize: 14, color: C.text_muted, fontFace: "Calibri",
+      align: "center", italic: true, margin: 0
+    });
+
+    // Primary Memory Card
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 1.25, w: 4.3, h: 3.9,
+      fill: { color: "4C1D95" }, line: { type: "none" },
+      shadow: mkShadowSoft()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 0.3, y: 1.25, w: 4.3, h: 0.22, fill: { color: C.accent3 }, line: { type: "none" } });
+
+    const ramIcon = await iconToBase64Png(FaMemory, "#F59E0B", 300);
+    s.addImage({ data: ramIcon, x: 0.65, y: 1.6, w: 0.7, h: 0.7 });
+
+    s.addText("Primary Memory", {
+      x: 1.45, y: 1.55, w: 2.9, h: 0.7,
+      fontSize: 19, bold: true, color: C.accent3,
+      fontFace: "Arial Black", margin: 0, valign: "middle"
+    });
+
+    s.addText("Used directly by the CPU", {
+      x: 0.5, y: 2.45, w: 3.9, h: 0.45,
+      fontSize: 13, color: "FDE68A", fontFace: "Calibri",
+      italic: true, margin: 0
+    });
+
+    s.addText([
+      { text: "⚡  Fast access speed", options: { breakLine: true } },
+      { text: "⚡  Temporary (lost on power off)", options: { breakLine: true } },
+      { text: "⚡  Limited capacity", options: { breakLine: true } },
+    ], {
+      x: 0.5, y: 3.0, w: 3.9, h: 1.8,
+      fontSize: 13, color: "E9D5FF", fontFace: "Calibri", margin: 0
+    });
+
+    s.addText("Examples: RAM, ROM", {
+      x: 0.5, y: 4.7, w: 3.9, h: 0.35,
+      fontSize: 13, bold: true, color: C.accent3,
+      fontFace: "Calibri", margin: 0
+    });
+
+    // Secondary Memory Card
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 5.4, y: 1.25, w: 4.3, h: 3.9,
+      fill: { color: "065F46" }, line: { type: "none" },
+      shadow: mkShadowSoft()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 5.4, y: 1.25, w: 4.3, h: 0.22, fill: { color: C.accent2 }, line: { type: "none" } });
+
+    const ssdIcon = await iconToBase64Png(FaServer, "#10B981", 300);
+    s.addImage({ data: ssdIcon, x: 5.75, y: 1.6, w: 0.7, h: 0.7 });
+
+    s.addText("Secondary Memory", {
+      x: 6.55, y: 1.55, w: 2.85, h: 0.7,
+      fontSize: 17, bold: true, color: C.accent2,
+      fontFace: "Arial Black", margin: 0, valign: "middle"
+    });
+
+    s.addText("Long-term storage for your files", {
+      x: 5.6, y: 2.45, w: 3.9, h: 0.45,
+      fontSize: 13, color: "6EE7B7", fontFace: "Calibri",
+      italic: true, margin: 0
+    });
+
+    s.addText([
+      { text: "💾  Permanent (retained when off)", options: { breakLine: true } },
+      { text: "💾  Large capacity", options: { breakLine: true } },
+      { text: "💾  Slower than primary", options: { breakLine: true } },
+    ], {
+      x: 5.6, y: 3.0, w: 3.9, h: 1.8,
+      fontSize: 13, color: "D1FAE5", fontFace: "Calibri", margin: 0
+    });
+
+    s.addText("Examples: HDD, SSD", {
+      x: 5.6, y: 4.7, w: 3.9, h: 0.35,
+      fontSize: 13, bold: true, color: C.accent2,
+      fontFace: "Calibri", margin: 0
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 4: Magnetic Tape Drives
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: "B45309" }, line: { type: "none" } });
+    s.addText("Magnetic Tape Drives", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    // Intro box
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 0.72, w: 9.4, h: 0.75,
+      fill: { color: "FEF3C7" }, line: { color: "F59E0B", width: 1.5 }
+    });
+    s.addText("🧲  These devices use magnetic media to store data — like a really long cassette tape!", {
+      x: 0.45, y: 0.72, w: 9.1, h: 0.75,
+      fontSize: 14, color: "78350F", fontFace: "Calibri",
+      valign: "middle", margin: 8
+    });
+
+    // Advantages card
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 1.65, w: 4.3, h: 3.55,
+      fill: { color: "ECFDF5" }, line: { color: C.accent2, width: 1.5 },
+      shadow: mkShadow()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 0.3, y: 1.65, w: 4.3, h: 0.5, fill: { color: C.accent2 }, line: { type: "none" } });
+
+    const checkIcon = await iconToBase64Png(FaCheckCircle, "#FFFFFF", 256);
+    s.addImage({ data: checkIcon, x: 0.45, y: 1.72, w: 0.35, h: 0.35 });
+    s.addText("Advantages", {
+      x: 0.9, y: 1.68, w: 3.5, h: 0.45,
+      fontSize: 17, bold: true, color: "FFFFFF",
+      fontFace: "Arial Black", margin: 0, valign: "middle"
+    });
+
+    s.addText([
+      { text: "✅  Large storage space — can hold terabytes of data", options: { breakLine: true } },
+      { text: "\n", options: { breakLine: true, fontSize: 6 } },
+      { text: "✅  Relatively cheap to manufacture and buy", options: { breakLine: true } },
+      { text: "\n", options: { breakLine: true, fontSize: 6 } },
+      { text: "✅  Good for archiving data long-term", options: { breakLine: false } },
+    ], {
+      x: 0.5, y: 2.3, w: 3.9, h: 2.7,
+      fontSize: 13, color: "065F46", fontFace: "Calibri", margin: 0, valign: "top"
+    });
+
+    // Disadvantages card
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 5.4, y: 1.65, w: 4.3, h: 3.55,
+      fill: { color: "FFF1F2" }, line: { color: C.accent, width: 1.5 },
+      shadow: mkShadow()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 5.4, y: 1.65, w: 4.3, h: 0.5, fill: { color: C.accent }, line: { type: "none" } });
+
+    const crossIcon = await iconToBase64Png(FaTimesCircle, "#FFFFFF", 256);
+    s.addImage({ data: crossIcon, x: 5.55, y: 1.72, w: 0.35, h: 0.35 });
+    s.addText("Disadvantages", {
+      x: 6.0, y: 1.68, w: 3.5, h: 0.45,
+      fontSize: 17, bold: true, color: "FFFFFF",
+      fontFace: "Arial Black", margin: 0, valign: "middle"
+    });
+
+    s.addText([
+      { text: "❌  Much slower read/write speed than SSDs", options: { breakLine: true } },
+      { text: "\n", options: { breakLine: true, fontSize: 6 } },
+      { text: "❌  Can be damaged easily by heat, moisture, or magnets", options: { breakLine: true } },
+      { text: "\n", options: { breakLine: true, fontSize: 6 } },
+      { text: "❌  Sequential access only — can't jump to a specific file", options: { breakLine: false } },
+    ], {
+      x: 5.6, y: 2.3, w: 3.9, h: 2.7,
+      fontSize: 13, color: "9F1239", fontFace: "Calibri", margin: 0, valign: "top"
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 5: Optical Storage
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: C.secondary }, line: { type: "none" } });
+    s.addText("Optical Storage Devices", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 0.72, w: 9.4, h: 0.7,
+      fill: { color: "ECFEFF" }, line: { color: C.secondary, width: 1.5 }
+    });
+    s.addText("💿  Use laser technology to read & write data — great for music, movies, and software!", {
+      x: 0.45, y: 0.72, w: 9.1, h: 0.7,
+      fontSize: 14, color: "164E63", fontFace: "Calibri",
+      valign: "middle", margin: 8
+    });
+
+    // 3 device cards
+    const optDevices = [
+      { name: "CD", full: "Compact Disc", cap: "~700 MB", use: "Music & simple software", color: "06B6D4", light: "CFFAFE", dark: "164E63" },
+      { name: "DVD", full: "Digital Versatile Disc", cap: "4.7 GB – 17 GB", use: "Movies & large games", color: "8B5CF6", light: "EDE9FE", dark: "2E1065" },
+      { name: "Blu-ray", full: "Blu-ray Disc", cap: "Up to 128 GB", use: "HD video & big data", color: "3B82F6", light: "DBEAFE", dark: "1E3A5F" },
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      const d = optDevices[i];
+      const x = 0.3 + i * 3.23;
+
+      s.addShape(pres.shapes.RECTANGLE, {
+        x, y: 1.6, w: 3.0, h: 3.65,
+        fill: { color: "FFFFFF" }, line: { color: d.color, width: 2 },
+        shadow: mkShadow()
+      });
+      s.addShape(pres.shapes.RECTANGLE, { x, y: 1.6, w: 3.0, h: 0.65, fill: { color: d.color }, line: { type: "none" } });
+
+      const cdIcon = await iconToBase64Png(FaCompactDisc, "#FFFFFF", 256);
+      s.addImage({ data: cdIcon, x: x + 0.15, y: 1.68, w: 0.47, h: 0.47 });
+
+      s.addText(d.name, {
+        x: x + 0.7, y: 1.62, w: 2.15, h: 0.6,
+        fontSize: 22, bold: true, color: "FFFFFF",
+        fontFace: "Arial Black", margin: 0, valign: "middle"
+      });
+
+      s.addText(d.full, {
+        x: x + 0.1, y: 2.38, w: 2.8, h: 0.4,
+        fontSize: 12, color: d.color, fontFace: "Calibri",
+        bold: true, italic: true, margin: 0
+      });
+
+      s.addShape(pres.shapes.RECTANGLE, { x: x + 0.1, y: 2.8, w: 2.8, h: 0.03, fill: { color: d.color }, line: { type: "none" } });
+
+      s.addText("Capacity:", {
+        x: x + 0.1, y: 2.9, w: 2.8, h: 0.3,
+        fontSize: 11, color: "6B7280", fontFace: "Calibri",
+        bold: true, margin: 0
+      });
+      s.addText(d.cap, {
+        x: x + 0.1, y: 3.22, w: 2.8, h: 0.35,
+        fontSize: 14, color: d.dark, fontFace: "Calibri",
+        bold: true, margin: 0
+      });
+      s.addText("Common use:", {
+        x: x + 0.1, y: 3.65, w: 2.8, h: 0.3,
+        fontSize: 11, color: "6B7280", fontFace: "Calibri",
+        bold: true, margin: 0
+      });
+      s.addText(d.use, {
+        x: x + 0.1, y: 3.97, w: 2.8, h: 0.5,
+        fontSize: 13, color: d.dark, fontFace: "Calibri", margin: 0
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 6: Solid-State Storage
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: C.primary }, line: { type: "none" } });
+    s.addText("Solid-State Storage Devices", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    // Hero stat row
+    const stats = [
+      { val: "NO", sub: "Moving parts", color: C.accent },
+      { val: "⚡ FAST", sub: "Read/Write Speed", color: C.secondary },
+      { val: "TOUGH", sub: "Shock resistant", color: C.accent2 },
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      const st = stats[i];
+      const x = 0.3 + i * 3.23;
+      s.addShape(pres.shapes.RECTANGLE, {
+        x, y: 0.7, w: 3.0, h: 1.4,
+        fill: { color: C.bg_dark }, line: { type: "none" },
+        shadow: mkShadow()
+      });
+      s.addShape(pres.shapes.RECTANGLE, { x, y: 0.7, w: 3.0, h: 0.12, fill: { color: st.color }, line: { type: "none" } });
+      s.addText(st.val, {
+        x, y: 0.85, w: 3.0, h: 0.72,
+        fontSize: 28, bold: true, color: st.color,
+        fontFace: "Arial Black", align: "center", margin: 0
+      });
+      s.addText(st.sub, {
+        x, y: 1.58, w: 3.0, h: 0.42,
+        fontSize: 12, color: "A78BFA",
+        align: "center", fontFace: "Calibri", margin: 0
+      });
+    }
+
+    // Info section
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 2.28, w: 9.4, h: 2.95,
+      fill: { color: "F5F3FF" }, line: { color: C.primary, width: 1.5 },
+      shadow: mkShadow()
+    });
+
+    const chipIcon = await iconToBase64Png(FaMicrochip, "#7C3AED", 300);
+    s.addImage({ data: chipIcon, x: 0.5, y: 2.45, w: 0.7, h: 0.7 });
+
+    s.addText("How it works:", {
+      x: 1.35, y: 2.42, w: 5.0, h: 0.42,
+      fontSize: 16, bold: true, color: C.primary,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    s.addText([
+      { text: "→  Uses flash memory chips instead of magnetic tapes", options: { breakLine: true } },
+      { text: "→  No moving parts means silent operation and better durability", options: { breakLine: true } },
+      { text: "→  Much faster read/write speeds than traditional HDDs", options: { breakLine: true } },
+      { text: "→  More energy efficient — great for laptops & phones", options: { breakLine: false } },
+    ], {
+      x: 0.5, y: 3.0, w: 8.9, h: 2.1,
+      fontSize: 14, color: C.text_dark, fontFace: "Calibri", margin: 0
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 7: Cloud Storage
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: "0369A1" }, line: { type: "none" } });
+    s.addText("Cloud Storage", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    // Concept box
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 0.72, w: 9.4, h: 1.4,
+      fill: { color: "EFF6FF" }, line: { color: "3B82F6", width: 1.5 },
+      shadow: mkShadow()
+    });
+
+    const cloudIcon = await iconToBase64Png(FaCloud, "#3B82F6", 300);
+    s.addImage({ data: cloudIcon, x: 0.5, y: 0.85, w: 0.9, h: 0.9 });
+
+    s.addText("Data is stored on remote servers and accessed via the internet — your files live in someone else's computer!", {
+      x: 1.6, y: 0.75, w: 7.9, h: 1.3,
+      fontSize: 14, color: "1E40AF", fontFace: "Calibri",
+      valign: "middle", margin: 0
+    });
+
+    // Feature blocks row
+    const features = [
+      { title: "Access Anywhere", desc: "Use any device with internet to reach your files", emoji: "🌍", color: "3B82F6" },
+      { title: "Always Backed Up", desc: "Files are safe even if your laptop breaks", emoji: "🔒", color: "8B5CF6" },
+      { title: "Easy Sharing", desc: "Share files with friends in seconds", emoji: "🤝", color: "06B6D4" },
+    ];
+
+    for (let i = 0; i < 3; i++) {
+      const f = features[i];
+      const x = 0.3 + i * 3.23;
+      s.addShape(pres.shapes.RECTANGLE, {
+        x, y: 2.3, w: 3.0, h: 1.65,
+        fill: { color: "FFFFFF" }, line: { color: f.color, width: 1.5 },
+        shadow: mkShadow()
+      });
+      s.addShape(pres.shapes.RECTANGLE, { x, y: 2.3, w: 3.0, h: 0.15, fill: { color: f.color }, line: { type: "none" } });
+      s.addText(f.emoji + "  " + f.title, {
+        x: x + 0.1, y: 2.5, w: 2.8, h: 0.5,
+        fontSize: 14, bold: true, color: f.color,
+        fontFace: "Arial Black", margin: 0
+      });
+      s.addText(f.desc, {
+        x: x + 0.1, y: 3.05, w: 2.8, h: 0.85,
+        fontSize: 12, color: "374151", fontFace: "Calibri", margin: 0
+      });
+    }
+
+    // Examples
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 4.12, w: 9.4, h: 1.2,
+      fill: { color: "1E3A5F" }, line: { type: "none" }
+    });
+    s.addText("📦  Popular Examples:", {
+      x: 0.5, y: 4.15, w: 3.0, h: 0.45,
+      fontSize: 14, bold: true, color: "93C5FD",
+      fontFace: "Arial Black", margin: 0
+    });
+    s.addText([
+      { text: "☁️  Google Drive", options: { bold: true, breakLine: false } },
+      { text: "     |     ", options: { color: "4B5563", breakLine: false } },
+      { text: "☁️  Dropbox", options: { bold: true, breakLine: false } },
+      { text: "     |     ", options: { color: "4B5563", breakLine: false } },
+      { text: "☁️  iCloud", options: { bold: true, breakLine: false } },
+      { text: "     |     ", options: { color: "4B5563", breakLine: false } },
+      { text: "☁️  OneDrive", options: { bold: true, breakLine: false } },
+    ], {
+      x: 0.5, y: 4.62, w: 9.0, h: 0.55,
+      fontSize: 14, color: "BFDBFE", fontFace: "Calibri",
+      align: "center", margin: 0
+    });
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 8: Storage Capacity
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: C.accent }, line: { type: "none" } });
+    s.addText("Storage Capacity", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 20, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    s.addText("Data is measured in units — starting from tiny bits to huge terabytes!", {
+      x: 0.4, y: 0.65, w: 9.2, h: 0.45,
+      fontSize: 13, color: C.text_muted, fontFace: "Calibri",
+      italic: true, align: "center", margin: 0
+    });
+
+    // Capacity pyramid / ladder
+    const units = [
+      { name: "Bit", abbr: "b", desc: "Smallest unit — a 0 or 1", color: "E0E7FF", text: "4C1D95", size: 11 },
+      { name: "Byte", abbr: "B", desc: "8 bits = 1 Byte", color: "DDD6FE", text: "4C1D95", size: 11 },
+      { name: "Kilobyte", abbr: "KB", desc: "1,024 Bytes ≈ a short email", color: "C4B5FD", text: "3B1F7A", size: 12 },
+      { name: "Megabyte", abbr: "MB", desc: "1,024 KB ≈ a photo", color: "A78BFA", text: "2D1874", size: 13 },
+      { name: "Gigabyte", abbr: "GB", desc: "1,024 MB ≈ a movie", color: "8B5CF6", text: "FFFFFF", size: 14 },
+      { name: "Terabyte", abbr: "TB", desc: "1,024 GB ≈ a large hard drive", color: "7C3AED", text: "FFFFFF", size: 15 },
+    ];
+
+    for (let i = 0; i < units.length; i++) {
+      const u = units[i];
+      const y = 1.2 + i * 0.68;
+      const indent = i * 0.3;
+
+      s.addShape(pres.shapes.RECTANGLE, {
+        x: 0.3 + indent, y, w: 9.4 - indent * 2, h: 0.58,
+        fill: { color: u.color }, line: { type: "none" },
+        shadow: mkShadow()
+      });
+      s.addText(u.abbr, {
+        x: 0.5 + indent, y, w: 0.85, h: 0.58,
+        fontSize: u.size + 2, bold: true, color: u.text,
+        fontFace: "Arial Black", align: "center", valign: "middle", margin: 0
+      });
+      s.addText(u.name, {
+        x: 1.4 + indent, y, w: 2.5, h: 0.58,
+        fontSize: u.size, bold: true, color: u.text,
+        fontFace: "Calibri", valign: "middle", margin: 0
+      });
+      s.addText(u.desc, {
+        x: 4.2, y, w: 5.0, h: 0.58,
+        fontSize: 12, color: u.text === "FFFFFF" ? "E9D5FF" : "4C1D95",
+        fontFace: "Calibri", valign: "middle", margin: 0
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 9: Advantages & Disadvantages
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_light };
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 0, y: 0, w: 10, h: 0.55, fill: { color: "1F2937" }, line: { type: "none" } });
+    s.addText("Advantages & Disadvantages of Storage", {
+      x: 0.4, y: 0.05, w: 9.2, h: 0.45,
+      fontSize: 18, bold: true, color: C.text_light,
+      fontFace: "Arial Black", margin: 0
+    });
+
+    // Advantages
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 0.3, y: 0.72, w: 4.3, h: 4.65,
+      fill: { color: "ECFDF5" }, line: { color: C.accent2, width: 2 },
+      shadow: mkShadow()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 0.3, y: 0.72, w: 4.3, h: 0.55, fill: { color: C.accent2 }, line: { type: "none" } });
+    s.addText("✅  Advantages", {
+      x: 0.45, y: 0.72, w: 4.0, h: 0.55,
+      fontSize: 18, bold: true, color: "FFFFFF",
+      fontFace: "Arial Black", valign: "middle", margin: 0
+    });
+
+    const advItems = [
+      ["Data Backup", "Keep copies of files safe from accidental deletion"],
+      ["Easy Access & Transfer", "Quickly move files between devices or people"],
+      ["Large Capacity", "Store thousands of songs, photos, and videos"],
+    ];
+    for (let i = 0; i < advItems.length; i++) {
+      const [title, desc] = advItems[i];
+      const y = 1.42 + i * 1.2;
+      s.addShape(pres.shapes.RECTANGLE, {
+        x: 0.5, y, w: 3.9, h: 1.05,
+        fill: { color: "D1FAE5" }, line: { type: "none" }
+      });
+      s.addText("✅  " + title, {
+        x: 0.65, y: y + 0.05, w: 3.65, h: 0.38,
+        fontSize: 13, bold: true, color: "065F46",
+        fontFace: "Calibri", margin: 0
+      });
+      s.addText(desc, {
+        x: 0.65, y: y + 0.45, w: 3.65, h: 0.55,
+        fontSize: 11, color: "374151", fontFace: "Calibri", margin: 0
+      });
+    }
+
+    // Disadvantages
+    s.addShape(pres.shapes.RECTANGLE, {
+      x: 5.4, y: 0.72, w: 4.3, h: 4.65,
+      fill: { color: "FFF1F2" }, line: { color: C.accent, width: 2 },
+      shadow: mkShadow()
+    });
+    s.addShape(pres.shapes.RECTANGLE, { x: 5.4, y: 0.72, w: 4.3, h: 0.55, fill: { color: C.accent }, line: { type: "none" } });
+    s.addText("❌  Disadvantages", {
+      x: 5.55, y: 0.72, w: 4.0, h: 0.55,
+      fontSize: 18, bold: true, color: "FFFFFF",
+      fontFace: "Arial Black", valign: "middle", margin: 0
+    });
+
+    const disItems = [
+      ["Hardware Failure", "Drives can crash and you could lose all your data"],
+      ["Cost", "High capacity SSDs and cloud subscriptions can be expensive"],
+      ["Risk of Data Loss", "Malware, theft or accidents can wipe your storage"],
+    ];
+    for (let i = 0; i < disItems.length; i++) {
+      const [title, desc] = disItems[i];
+      const y = 1.42 + i * 1.2;
+      s.addShape(pres.shapes.RECTANGLE, {
+        x: 5.6, y, w: 3.9, h: 1.05,
+        fill: { color: "FFE4E6" }, line: { type: "none" }
+      });
+      s.addText("❌  " + title, {
+        x: 5.75, y: y + 0.05, w: 3.65, h: 0.38,
+        fontSize: 13, bold: true, color: "9F1239",
+        fontFace: "Calibri", margin: 0
+      });
+      s.addText(desc, {
+        x: 5.75, y: y + 0.45, w: 3.65, h: 0.55,
+        fontSize: 11, color: "374151", fontFace: "Calibri", margin: 0
+      });
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // SLIDE 10: Outro / Thank You
+  // ─────────────────────────────────────────────
+  {
+    const s = pres.addSlide();
+    s.background = { color: C.bg_dark };
+
+    // Decorative circles
+    s.addShape(pres.shapes.OVAL, { x: -1, y: -1, w: 4, h: 4, fill: { color: C.primary, transparency: 78 }, line: { type: "none" } });
+    s.addShape(pres.shapes.OVAL, { x: 7.5, y: 3.0, w: 3.5, h: 3.5, fill: { color: C.secondary, transparency: 75 }, line: { type: "none" } });
+    s.addShape(pres.shapes.OVAL, { x: 8, y: -0.5, w: 2, h: 2, fill: { color: C.accent, transparency: 70 }, line: { type: "none" } });
+
+    // Glow card
+    s.addShape(pres.shapes.ROUNDED_RECTANGLE, {
+      x: 0.8, y: 1.1, w: 8.4, h: 3.2,
+      fill: { color: C.primary, transparency: 80 },
+      line: { color: C.secondary, width: 1.5 },
+      rectRadius: 0.18
+    });
+
+    const dbIcon2 = await iconToBase64Png(FaDatabase, "#06B6D4", 300);
+    s.addImage({ data: dbIcon2, x: 4.5, y: 1.15, w: 0.65, h: 0.65 });
+
+    s.addText("THAT'S A WRAP!", {
+      x: 0.8, y: 1.65, w: 8.4, h: 0.85,
+      fontSize: 38, bold: true, color: C.text_light,
+      fontFace: "Arial Black", align: "center", margin: 0, charSpacing: 3
+    });
+
+    s.addShape(pres.shapes.RECTANGLE, { x: 3.5, y: 2.55, w: 3.0, h: 0.05, fill: { color: C.secondary }, line: { type: "none" } });
+
+    s.addText("Thanks for watching! 💾", {
+      x: 0.8, y: 2.65, w: 8.4, h: 0.65,
+      fontSize: 22, bold: true, color: C.secondary,
+      fontFace: "Arial Black", align: "center", margin: 0
+    });
+
+    s.addText("Storage Devices and Media  •  ICT Presentation", {
+      x: 0.8, y: 3.45, w: 8.4, h: 0.55,
+      fontSize: 13, color: "A78BFA", align: "center",
+      fontFace: "Calibri", italic: true, margin: 0
+    });
+
+    // Quick summary row
+    s.addText("Magnetic  •  Optical  •  Solid-State  •  Cloud", {
+      x: 0.0, y: 5.1, w: 10.0, h: 0.38,
+      fontSize: 12, color: "7C6DAB", align: "center",
+      fontFace: "Calibri", charSpacing: 2, margin: 0
+    });
+  }
+
+  await pres.writeFile({ fileName: "/home/claude/Storage_Devices_Upgraded.pptx" });
+  console.log("Done!");
+}
+
+buildPresentation().catch(console.error);
